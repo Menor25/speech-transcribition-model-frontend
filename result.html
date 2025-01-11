@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcription Result</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Transcription Result</h1>
+        </header>
+        
+        <!-- Display Transcribed Text -->
+        <div class="card">
+            <h2>Transcribed Text</h2>
+            <textarea id="transcription-text" rows="10" class="transcription-box">{{ transcription }}</textarea>
+        </div>
+
+        <!-- Suggestions for Corrections -->
+        <div id="prediction-box">
+            <h3>Word Suggestions</h3>
+            <ul id="predictions"></ul>
+        </div>
+
+        <!-- Feedback Form -->
+        <div class="feedback-form">
+            <h2>Rate the Transcription</h2>
+            <form action="/submit_feedback" method="POST">
+                <label for="rating">How accurate was the transcription?</label>
+                <select id="rating" name="rating" required>
+                    <option value="5">Excellent</option>
+                    <option value="4">Good</option>
+                    <option value="3">Average</option>
+                    <option value="2">Poor</option>
+                    <option value="1">Very Poor</option>
+                </select>
+
+                <label for="feedback">Share your feedback:</label>
+                <textarea id="feedback" name="feedback" rows="4" placeholder="What did you like or dislike?"></textarea>
+
+                <button type="submit" class="btn">Submit Feedback</button>
+            </form>
+        </div>
+        
+        <a href="/" class="btn">Transcribe Another</a>
+    </div>
+
+    <!-- JavaScript for Word Suggestions -->
+    <script>
+        $(document).ready(function () {
+            const transcriptionBox = $("#transcription-text");
+            const predictionBox = $("#prediction-box");
+            const predictionsList = $("#predictions");
+
+            // Hide prediction box initially
+            predictionBox.hide();
+
+            // Fetch word predictions dynamically
+            transcriptionBox.on("keyup", function () {
+                const text = $(this).val();
+                const lastWord = text.split(" ").slice(-1)[0];
+
+                if (lastWord.length > 2) {
+                    // AJAX call to fetch predictions
+                    $.ajax({
+                        url: "/predict_word",
+                        method: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify({ context: text }),
+                        success: function (response) {
+                            predictionsList.empty();
+                            response.forEach((word) => {
+                                predictionsList.append(`<li>${word}</li>`);
+                            });
+                            predictionBox.show();
+                        },
+                        error: function (err) {
+                            console.error("Error fetching predictions:", err);
+                        },
+                    });
+                } else {
+                    predictionBox.hide();
+                }
+            });
+
+            // Click on a prediction to replace the last word
+            predictionsList.on("click", "li", function () {
+                const selectedWord = $(this).text();
+                const text = transcriptionBox.val();
+                const words = text.split(" ");
+                words[words.length - 1] = selectedWord;
+                transcriptionBox.val(words.join(" "));
+                predictionBox.hide();
+            });
+        });
+    </script>
+
+    <style>
+        /* Styling for prediction box */
+        #prediction-box {
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #predictions {
+            list-style: none;
+            padding: 10px;
+            margin: 0;
+        }
+
+        #predictions li {
+            padding: 5px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        #predictions li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .transcription-box {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+    </style>
+</body>
+</html>

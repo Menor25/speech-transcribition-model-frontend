@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition & NLP Testing</title>
+    <link rel="stylesheet" href="/static/styles.css">
+ 
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Enhanced Speech Recognition System</h1>
+            <p>Upload your audio file to generate accurate transcription and NLP-enhanced text.</p>
+        </header>
+
+        <div class="card">
+            <form id="upload-form" action="/transcribe" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="audio-file">Choose an audio file:</label>
+                    <input type="file" id="audioFile" name="file" accept="audio/*" required>
+                    <!-- <input type="file" id="audio-file" name="file" accept="audio/*" required> -->
+                </div>
+                <button type="submit" class="btn">Transcribe</button>
+            </form>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2024 Enhanced Speech Recognition and NLP System</p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById("uploadForm");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const file = document.getElementById("audioFile").files[0];
+            const formData = new FormData();
+            formData.append("audio", file);
+
+            const response = await fetch("/transcribe", {
+                method: "POST",
+                body: formData,
+            });
+
+            const result = await response.json();
+            const outputDiv = document.getElementById("output");
+            outputDiv.innerHTML = `
+                <h3>Transcription:</h3>
+                <p>${result.transcription}</p>
+                <h3>NLP Result:</h3>
+                <p>${JSON.stringify(result.nlp_result, null, 2)}</p>
+            `;
+        });
+    </script>
+</body>
+</html>
